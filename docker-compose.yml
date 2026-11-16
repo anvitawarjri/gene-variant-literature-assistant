@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: variant_literature
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/variant_literature
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
